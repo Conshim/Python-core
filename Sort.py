@@ -2,6 +2,7 @@ import os
 import glob
 import shutil
 import unicodedata
+import sys
 
 def normalize(filename):
     cleaned_filename = unicodedata.normalize('NFD', filename).encode('ascii', 'ignore').decode("utf-8")
@@ -24,6 +25,7 @@ file_formats = {
     'pdf': "document",
     'xlsx': "document",
     'pptx': "document",
+    'pdf': "document",
     'mp3': "music",
     'ogg': "music",
     'wav': "music",
@@ -41,7 +43,21 @@ def delete_empty_folders(path):
                 os.rmdir(folder_path)
                 print(f"Deleted empty folder: {folder_path}")
 
-path = "C:\\Imagetest1" # Тут ви вказуєте адресу папки з файлами, щоб воно все відсортувало
+if __name__ == "__main__":
+    if len(sys.argv)!=2:
+        print(f"Використовуйте: python sort.py {sys.argv}") 
+        sys.exit (1)
+
+    path=sys.argv[1]
+
+if not os.path.exists(path):
+    print("Вказаний шлях не існує.")
+    sys.exit(1) 
+
+if not os.path.isdir(path): 
+    print("Вказаний шлях не є папкою.")
+    sys.exit (1)
+
 
 delete_empty_folders(path)
 
@@ -61,4 +77,4 @@ for file_format, folder_name in file_formats.items():
         print(f"Перенесений файл {file} в {dst}")
         shutil.move(file, dst)
 
-input("Нажми Enter, чтобы закрыть программу...")
+input("Натисніть Enter, щоб закрити програму...")
