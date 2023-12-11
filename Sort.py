@@ -1,12 +1,15 @@
 import os
 import glob
 import shutil
-import unicodedata
+from transliterate import translit
 import sys
+import zipfile 
+import glob
 
 def normalize(filename):
-    cleaned_filename = unicodedata.normalize('NFD', filename).encode('ascii', 'ignore').decode("utf-8")
-    cleaned_filename = ''.join(c if c.isalnum() else '_' for c in cleaned_filename)
+    file_name, file_extension = os.path.splitext(filename)
+    trans_filename = translit(file_name, 'ru', reversed=True)
+    cleaned_filename = ''.join(c if c.isalnum() or c.isspace() else '_' for c in trans_filename)
     return cleaned_filename
 
 file_formats = {   
@@ -19,21 +22,34 @@ file_formats = {
     'mov': "video",
     'mkv': "video",
     'gif': "video",
-    'doc': "document",
-    'docx': "document",
-    'txt': "document",
-    'pdf': "document",
-    'xlsx': "document",
-    'pptx': "document",
-    'pdf': "document",
-    'mp3': "music",
-    'ogg': "music",
-    'wav': "music",
-    'amr': "music",
-    'zip': "archive",
-    'gz': "archive",
-    'tar': "archive"
+    'doc': "documents",
+    'docx': "documents",
+    'txt': "documents",
+    'pdf': "documents",
+    'xlsx': "documents",
+    'pptx': "documents",
+    'pdf': "documents",
+    'mp3': "audio",
+    'ogg': "audio",
+    'wav': "audio",
+    'amr': "audio",
+    'zip': "archives",
+    'gz': "archives",
+    'tar': "archives "
 }
+
+def extract_archives(path):
+    archive_files = [f for f in glob.glob(os.path.join(path, "*.zip")) + glob.glob(os.path.join(path, "*.gz")) + glob.glob(os.path.join(path, "*.tar")) if os.path.isfile(f)]
+
+    for archive in archive_files:
+        try:
+            with zipfile.ZipFile(archive, 'r') as zip_ref:
+                zip_ref.extractall(path)
+                print(f"Розпаковано архів: {archive}")
+                os.remove(archive)  
+        except zipfile.BadZipFile:
+            print(f"Не вдалося розпакувати архів: {archive}. Видалено.")
+            os.remove(archive)
 
 def delete_empty_folders(path):
     for root, dirs, files in os.walk(path, topdown=False):
@@ -53,7 +69,20 @@ def delete_empty_folders(path):
                 os.rmdir(folder_path)
                 print(f"Видалено непорожню папку та переміщено її вміст до {path}")
 
-        
+def extract_all_archives(root_path):
+    for root, dirs, files in os.walk(root_path):
+        for file in files:
+            if file.endswith('.zip'):
+                archive = os.path.join(root, file)
+                try:
+                    with zipfile.ZipFile(archive, 'r') as zip_ref:
+                        zip_ref.extractall(root)
+                        print(f"Распакован архив: {archive}")
+                        os.remove(archive)  
+                except zipfile.BadZipFile:
+                    print(f"Не удалось распаковать архив: {archive}. Удален.")
+                    os.remove(archive)        
+
 if __name__ == "__main__":
     if len(sys.argv)!=2:
         print(f"Використовуйте: python sort.py {sys.argv}") 
@@ -70,6 +99,7 @@ if not os.path.isdir(path):
     sys.exit (1)
 
 
+extract_archives(path)
 delete_empty_folders(path)
 
 for file_format, folder_name in file_formats.items():
@@ -105,4 +135,10 @@ for file in remaining_files:
         print(f"Перенесений файл {file} в {dst} (в папку other)")
         shutil.move(file, dst)
 
+extract_all_archives(path)
+
 input("Натисніть Enter, щоб закрити програму...")
+
+
+
+
