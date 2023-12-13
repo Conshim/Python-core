@@ -136,7 +136,6 @@ for file in remaining_files:
 
 extract_all_archives(path)
 
-input("Натисніть Enter, щоб закрити програму...")
 
 
 
