@@ -4,13 +4,11 @@ import shutil
 from transliterate import translit
 import sys
 import zipfile 
-import glob
 
 def normalize(filename):
     file_name, file_extension = os.path.splitext(filename)
-    trans_filename = translit(file_name, 'ru', reversed=True)
-    cleaned_filename = ''.join(c if c.isalnum() or c.isspace() else '_' for c in trans_filename)
-    return cleaned_filename
+    trans_filename = ''.join(c if c.isalnum() or c in {' ', '.'} else '_' for c in file_name)
+    return f"{trans_filename}{file_extension}"
 
 file_formats = {   
     'jpeg': "images",
@@ -128,16 +126,18 @@ if not os.path.isdir(other_folder):
 
 remaining_files = [f for f in glob.glob(os.path.join(path, "*")) if os.path.isfile(f)]
 for file in remaining_files:
-    if file != sys.argv[0]:  
+    if file != sys.argv[0]:
         basename = os.path.basename(file)
         cleaned_basename = normalize(basename)
-        dst = os.path.join(other_folder, cleaned_basename)
+        dst = os.path.join(other_folder, cleaned_basename)  
         print(f"Перенесений файл {file} в {dst} (в папку other)")
         shutil.move(file, dst)
+
 
 extract_all_archives(path)
 
 input("Натисніть Enter, щоб закрити програму...")
+
 
 
 
